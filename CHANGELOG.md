@@ -2,6 +2,12 @@
 
 完整提交以 Git 历史为准；已验证的线上版本使用 `release-<SHA前12位>` 标签及 `/version.json` 追踪。
 
+## 2026-11-21 — Ground 教室标注更新
+
+- 导入 `Dental_Kellogg_Ground_2D_Drive.svg`，保留新增教室、房间及区域名称。
+- 去掉新导出文件的打印排版与内部缩放平移，恢复原 Ground 地图坐标；四个定位参照墙角保持一致。
+- 沿用去标题、边框和标签底色的处理，清理重复文字；保留共享图例和 Ground 目的地说明。
+
 ## 2026-11-19 — 三层地图更新
 
 - 更新 Ground、First、Second 为新提供的 Team 2D corridor draft SVG，Overview 保持原图。

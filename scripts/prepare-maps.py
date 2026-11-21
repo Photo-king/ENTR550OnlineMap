@@ -14,6 +14,19 @@ second=[(1788,341),(1984,341),(1984,429),(2261,429),(2261,701),(2185,701),(2185,
 footprints={}
 for name,outline,factor in [('Ground',ground,1),('First',first,1),('Second',second,.75)]:
  source=E.parse(f'Mapsv1.0/Dental_Kellogg_{name}.svg').getroot()
+ ground_print_layout=name=='Ground' and source.get('viewBox')=='0 0 2200 2100'
+ # The November 21 Ground export wraps the original coordinates in a print
+ # layout enlarged by 1.5x. Unwrap that layout before cropping or generating
+ # reference panels, preserving the field-verified geographic registration.
+ if ground_print_layout:
+  wrapper=source.find('.//'+tag('g')+'[@transform="matrix(1.5 0 0 1.5 -900 -270)"]')
+  if wrapper is None or len(wrapper)!=1:
+   raise ValueError('Ground: unexpected print-layout transform')
+  normalized=E.Element(tag('svg'),{'viewBox':'0 0 2280 1650','width':'2280','height':'1650','fill':'none'})
+  normalized.append(copy.deepcopy(source.find(tag('defs'))))
+  content_layer=copy.deepcopy(wrapper[0]);content_layer.set('id','visitor-map-content')
+  normalized.append(content_layer)
+  source=normalized
  points=[(x*factor-39,y*factor+80) for x,y in outline]
  footprints[name.lower()]=[{'x':x,'y':y} for x,y in points]
  root=E.Element(tag('svg'),{'viewBox':'0 0 2280 1650','width':'2280','height':'1650','fill':'none'})
@@ -38,6 +51,11 @@ for name,outline,factor in [('Ground',ground,1),('First',first,1),('Second',seco
  if original_content is None:
   raise ValueError(f'{name}: cannot find map artwork')
  content=copy.deepcopy(original_content)
+ if ground_print_layout:
+  # Inside the print wrapper the building itself was also resized:
+  # new = old * 1.08 + (-204, -69.6). Invert this separately, restoring
+  # the existing wall coordinates and GPS anchors without recalibration.
+  content.set('transform','matrix(0.925925925926 0 0 0.925925925926 188.888888888889 64.444444444444)')
  # This outer mask belongs to the discarded sign frame. Inner artwork masks
  # are copied with their definitions and must remain intact.
  if content.get('mask'):
@@ -71,7 +89,7 @@ for name,outline,factor in [('Ground',ground,1),('First',first,1),('Second',seco
     parent.remove(child)
     # These chips cover a complete original black label. Keep that original
     # and remove its blue duplicate, which otherwise becomes overprinted.
-    if (name=='Second' and child.get('d','').startswith(duplicate_labels)
+    if ((ground_print_layout or (name=='Second' and child.get('d','').startswith(duplicate_labels)))
         and index+1<len(children) and children[index+1].tag==tag('path')):
      parent.remove(children[index+1])
  g.append(content)
